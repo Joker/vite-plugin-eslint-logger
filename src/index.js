@@ -2,6 +2,8 @@ const { normalizePath } = require('vite')
 const { createFilter } = require('@rollup/pluginutils')
 const { Worker } = require('worker_threads')
 const { resolve } = require('path')
+const { logger } = require('./logger.js')
+
 
 module.exports = function eslint(options = {}) {
 	const { includeFiles, excludeFiles } = options
@@ -28,9 +30,9 @@ module.exports = function eslint(options = {}) {
 			}
 		},
 		configureServer(server) {
-			const data = null
+			const eslintOptions = { cache: true }
 
-			worker = new Worker(resolve(__dirname, './worker.js'), { workerData: data })
+			worker = new Worker(resolve(__dirname, './worker.js'), { workerData: eslintOptions })
 			worker.on('message', payload => {
 				console.log('worker on message ---', payload)
 				server.ws.send(payload)
