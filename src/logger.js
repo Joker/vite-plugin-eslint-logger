@@ -1,4 +1,20 @@
-const logger = () => {}
+const pc = require('picocolors')
+
+const logger = ({
+	err: {
+		message,
+		frame,
+		plugin,
+		loc: { file, line, column },
+		ruleId,
+	},
+}) => {
+	const info = pc.cyan(pc.bold('[eslint]'))
+	const warn = pc.yellow(pc.bold('[eslint]'))
+
+	console.log(`${pc.dim(new Date().toLocaleTimeString())} ${pc.red(pc.bold('[eslint]'))} ${pc.red(message)} ${pc.dim(ruleId)}
+  Plugin: ${pc.magenta(plugin)}\n  File: ${pc.cyan(`${file}:${line}:${column}`)}\n${pc.yellow(pad(frame))}`)
+}
 
 const mapper = ({ filePath, messages, source }) => {
 	//errorCount, fatalErrorCount, warningCount, fixableErrorCount, fixableWarningCount
@@ -18,22 +34,33 @@ const mapper = ({ filePath, messages, source }) => {
 				// endLine,
 				// endColumn,
 			},
-			// ruleId,
+			ruleId,
 			// nodeType,
 			// messageId,
 			// severity,
 		},
 	}))
+	console.log(
+		out.forEach(el => {
+			console.log(el.err.loc)
+		})
+	)
+	console.log({ source })
 	return out
 }
 
 module.exports = { mapper, logger }
 
+
+//
+// vite/src/node/utils.ts
+//
+
 const range = 2
 const splitRE = /\r?\n/
 
 // no global export from vite =(
-function generateCodeFrame(source, start, end) {
+function generateCodeFrame(source, start = 0, end) {
 	start = posToNumber(source, start)
 	end = end || start
 	const lines = source.split(splitRE)
@@ -75,4 +102,9 @@ function posToNumber(source, pos) {
 		start += lines[i].length + 1
 	}
 	return start + column
+}
+
+function pad(source, n = 2) {
+	const lines = source.split(splitRE)
+	return lines.map(l => ` `.repeat(n) + l).join(`\n`)
 }

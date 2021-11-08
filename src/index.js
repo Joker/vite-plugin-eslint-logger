@@ -4,7 +4,6 @@ const { Worker } = require('worker_threads')
 const { resolve } = require('path')
 const { logger } = require('./logger.js')
 
-
 module.exports = function eslint(options = {}) {
 	const { includeFiles, excludeFiles } = options
 	const target = createFilter(includeFiles || ['**/*.js', '**/*.mjs', '**/*.cjs', '**/*.jsx', '**/*.ts', '**/*.tsx'], excludeFiles || /node_modules/)
@@ -18,14 +17,14 @@ module.exports = function eslint(options = {}) {
 		async transform(code, id) {
 			const path = normalizePath(id)
 			if (target(path)) {
-				console.log('transform ---', path)
+				// console.log('transform ---', path)
 				worker.postMessage(path)
 			}
 		},
 		async handleHotUpdate({ file }) {
 			const path = normalizePath(file)
 			if (target(path)) {
-				console.log('handleHotUpdate ---', path)
+				// console.log('handleHotUpdate ---', path)
 				worker.postMessage(path)
 			}
 		},
@@ -34,8 +33,11 @@ module.exports = function eslint(options = {}) {
 
 			worker = new Worker(resolve(__dirname, './worker.js'), { workerData: eslintOptions })
 			worker.on('message', payload => {
-				console.log('worker on message ---', payload)
-				server.ws.send(payload)
+				// console.log('worker on message ---', payload)
+				payload.forEach(err => {
+					logger(err)
+					server.ws.send(err)
+				})
 			})
 
 			server.middlewares.use((req, res, next) => {

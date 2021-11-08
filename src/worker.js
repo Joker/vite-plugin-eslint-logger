@@ -5,7 +5,7 @@ const { mapper } = require('./logger.js')
 const eslint = new ESLint(workerData)
 
 parentPort.on('message', async path => {
-	console.log('parentPort on message ---', path)
+	// console.log('parentPort on message ---', path)
 	if (await eslint.isPathIgnored(path)) return
 
 	const [report] = await eslint.lintFiles(path)
