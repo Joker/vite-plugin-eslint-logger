@@ -61,7 +61,7 @@ function makeFrame(source, start = { line: 0, column: 0 }, endColumn = 0) {
 	const nc = endColumn - start.column > 0 ? endColumn - start.column : 1
 
 	const out = lines.slice(hi, lo).map((st, i) => `${i + hi + 1} | ${st}`)
-	out.splice(start.line - hi, 0, `   | ${errln}${'^'.repeat(nc)}`)
+	out.splice(start.line - hi, 0, `   | ${errln}${pc.red('^'.repeat(nc))}`)
 
 	return out.join('\n')
 }

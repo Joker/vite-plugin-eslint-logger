@@ -7,6 +7,7 @@ const { logger } = require('./logger.js')
 module.exports = function eslint(options = {}) {
 	const { includeFiles, excludeFiles } = options
 	const target = createFilter(includeFiles || ['**/*.js', '**/*.mjs', '**/*.cjs', '**/*.jsx', '**/*.ts', '**/*.tsx'], excludeFiles || /node_modules/)
+	const notrun = makeGuard()
 
 	let worker = null
 
@@ -16,14 +17,14 @@ module.exports = function eslint(options = {}) {
 
 		async transform(code, id) {
 			const path = normalizePath(id)
-			if (target(path)) {
+			if (target(path) && notrun(path)) {
 				// console.log('transform ---', path)
 				worker.postMessage(path)
 			}
 		},
 		async handleHotUpdate({ file }) {
 			const path = normalizePath(file)
-			if (target(path)) {
+			if (target(path) && notrun(path)) {
 				// console.log('handleHotUpdate ---', path)
 				worker.postMessage(path)
 			}
@@ -33,16 +34,33 @@ module.exports = function eslint(options = {}) {
 
 			worker = new Worker(resolve(__dirname, './worker.js'), { workerData: eslintOptions })
 			worker.on('message', payload => {
-				// console.log('worker on message ---', payload)
 				payload.forEach(err => {
 					logger(err)
-					server.ws.send(err)
 				})
+				if (payload.length > 0) {
+					payload[0].err.frame = payload[0].err.frame.replace(/\u001b\[.*?m/g, '')
+					server.ws.send(payload[0])
+				}
 			})
 
 			server.middlewares.use((req, res, next) => {
 				next()
 			})
 		},
+	}
+}
+
+function makeGuard() {
+	let names = []
+	let tm = null
+	return path => {
+		clearTimeout(tm)
+		tm = setTimeout(() => {
+			names = []
+		}, 400)
+
+		if (names.includes(path)) return false
+		names.push(path)
+		return true
 	}
 }
