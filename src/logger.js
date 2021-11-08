@@ -24,7 +24,7 @@ const mapper = ({ filePath, messages, source }) => {
 			message,
 			stack: '',
 			// id: '?string',
-			frame: generateCodeFrame(source, { line, column }, endColumn),
+			frame: makeFrame(source, { line, column }, endColumn),
 			plugin: 'vite:eslint-logger',
 			// pluginCode: '?string',
 			loc: {
@@ -40,71 +40,33 @@ const mapper = ({ filePath, messages, source }) => {
 			// severity,
 		},
 	}))
-	console.log(
-		out.forEach(el => {
-			console.log(el.err.loc)
-		})
-	)
-	console.log({ source })
+	// console.log(
+	// 	out.forEach(el => {
+	// 		console.log(el.err.loc)
+	// 	})
+	// )
+	// console.log({ source })
 	return out
 }
 
 module.exports = { mapper, logger }
 
+function makeFrame(source, start = { line: 0, column: 0 }, endColumn = 0) {
+	const range = 2
+	const lines = source.split(/\r?\n/)
+	const errln = lines[start.line - 1].replaceAll(/[^\s\t]/g, ' ').substring(0, start.column - 1)
 
-//
-// vite/src/node/utils.ts
-//
+	const hi = start.line > range ? start.line - range - 1 : 0
+	const lo = start.line + range > lines.length ? lines.length : start.line + range
+	const nc = endColumn - start.column > 0 ? endColumn - start.column : 1
 
-const range = 2
-const splitRE = /\r?\n/
+	const out = lines.slice(hi, lo).map((st, i) => `${i + hi + 1} | ${st}`)
+	out.splice(start.line - hi, 0, `   | ${errln}${'^'.repeat(nc)}`)
 
-// no global export from vite =(
-function generateCodeFrame(source, start = 0, end) {
-	start = posToNumber(source, start)
-	end = end || start
-	const lines = source.split(splitRE)
-	let count = 0
-	const res = []
-	for (let i = 0; i < lines.length; i++) {
-		count += lines[i].length + 1
-		if (count >= start) {
-			for (let j = i - range; j <= i + range || end > count; j++) {
-				if (j < 0 || j >= lines.length) continue
-				const line = j + 1
-				res.push(`${line}${' '.repeat(Math.max(3 - String(line).length, 0))}|  ${lines[j]}`)
-				const lineLength = lines[j].length
-				if (j === i) {
-					// push underline
-					const pad = start - (count - lineLength) + 1
-					const length = Math.max(1, end > count ? lineLength - pad : end - start)
-					res.push(`   |  ` + ' '.repeat(pad) + '^'.repeat(length))
-				} else if (j > i) {
-					if (end > count) {
-						const length = Math.max(Math.min(end - count, lineLength), 1)
-						res.push(`   |  ` + '^'.repeat(length))
-					}
-					count += lineLength + 1
-				}
-			}
-			break
-		}
-	}
-	return res.join('\n')
-}
-
-function posToNumber(source, pos) {
-	if (typeof pos === 'number') return pos
-	const lines = source.split(splitRE)
-	const { line, column } = pos
-	let start = 0
-	for (let i = 0; i < line - 1; i++) {
-		start += lines[i].length + 1
-	}
-	return start + column
+	return out.join('\n')
 }
 
 function pad(source, n = 2) {
-	const lines = source.split(splitRE)
+	const lines = source.split(/\r?\n/)
 	return lines.map(l => ` `.repeat(n) + l).join(`\n`)
 }
