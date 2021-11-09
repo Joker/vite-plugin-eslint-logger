@@ -53,11 +53,10 @@ module.exports = function eslint(options = {}) {
 function makeGuard() {
 	let names = []
 	let tm = null
+	const reset = () => (names = [])
 	return path => {
 		clearTimeout(tm)
-		tm = setTimeout(() => {
-			names = []
-		}, 400)
+		tm = setTimeout(reset, 400)
 
 		if (names.includes(path)) return false
 		names.push(path)
