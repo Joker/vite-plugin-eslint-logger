@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-eslint-logger",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A vite plugin to show ESlint logs in browser and terminal",
   "main": "src/index.js",
   "scripts": {
