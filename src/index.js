@@ -37,6 +37,7 @@ module.exports = function eslint(options = {}) {
 				payload.forEach(err => {
 					logger(err)
 				})
+				console.log("\n\n")
 				if (payload.length > 0) {
 					payload[0].err.frame = payload[0].err.frame.replace(/\u001b\[.*?m/g, '')
 					server.ws.send(payload[0])

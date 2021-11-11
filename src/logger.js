@@ -12,8 +12,8 @@ const logger = ({
 	const info = pc.bold(pc.cyan('[eslint]'))
 	const warn = pc.bold(pc.yellow('[eslint]'))
 	const err = pc.bold(pc.red('[eslint]'))
-	console.log(`${pc.dim(new Date().toLocaleTimeString())} ${err} ${pc.red(message)} ${pc.dim(ruleId)}
-  Plugin: ${pc.magenta(plugin)}\n  File: ${pc.cyan(`${file}:${line}:${column}`)}\n${pc.yellow(pad(frame))}\n`)
+	console.log(`${pc.dim(new Date().toLocaleTimeString())} ${err} ${pc.red(message)}
+  Plugin: ${pc.magenta(plugin+':')}${pc.dim(ruleId)}\n  File: ${pc.cyan(`${file}:${line}:${column}`)}\n${pc.yellow(pad(frame))}\n`)
 }
 
 const mapper = ({ filePath, messages, source }) => {
