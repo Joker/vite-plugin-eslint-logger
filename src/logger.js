@@ -7,25 +7,30 @@ const logger = ({
 		plugin,
 		loc: { file, line, column },
 		ruleId,
+		severity,
+		suggest,
 	},
 }) => {
-	const info = pc.bold(pc.cyan('[eslint]'))
-	const warn = pc.bold(pc.yellow('[eslint]'))
-	const err = pc.bold(pc.red('[eslint]'))
-	console.log(`${pc.dim(new Date().toLocaleTimeString())} ${err} ${pc.red(message)}
-  Plugin: ${pc.magenta(plugin+':')}${pc.dim(ruleId)}\n  File: ${pc.cyan(`${file}:${line}:${column}`)}\n${pc.yellow(pad(frame))}\n`)
+	const color = severity == 2 ? 'red' : 'yellow'
+	const out = [
+		`${pc.dim(new Date().toLocaleTimeString())} ${pc.bold(pc[color]('[eslint]'))} ${pc.red(message)}`,
+		`   Plugin: ${pc.magenta(plugin + ':')}${pc.dim(ruleId)}`,
+		`   File: ${pc.cyan(`${file}:${line}:${column}`)}`,
+		`${pc.yellow(pad(frame))}${suggest ? '\n' + pad(suggest) : ''}\n`,
+	]
+	console.log(out.join('\n'))
 }
 
 const mapper = ({ filePath, messages, source }) => {
 	// errorCount, fatalErrorCount, warningCount, fixableErrorCount, fixableWarningCount
-	const out = messages.map(({ ruleId, severity, message, line, column, nodeType, messageId, endLine, endColumn }) => ({
+	const out = messages.map(({ ruleId, severity, message, line, column, nodeType, messageId, endLine, endColumn, suggestions = [] }) => ({
 		type: 'error',
 		err: {
 			message,
 			stack: '',
 			// id: '?string',
 			frame: makeFrame(source, { line, column }, endColumn),
-			plugin: 'vite:eslint-logger',
+			plugin: 'eslint-logger',
 			// pluginCode: '?string',
 			loc: {
 				file: filePath,
@@ -35,9 +40,10 @@ const mapper = ({ filePath, messages, source }) => {
 				// endColumn,
 			},
 			ruleId,
+			severity,
+			suggest: suggestions.map(s => s.desc).join('\n'),
 			// nodeType,
 			// messageId,
-			// severity,
 		},
 	}))
 	return out
@@ -69,7 +75,7 @@ function num(...i) {
 	return `${' '.repeat(i[0])} ${pc.gray('|')} `
 }
 
-function pad(source, n = 2) {
+function pad(source, n = 3) {
 	const lines = source.split(/\r?\n/)
 	return lines.map(l => ` `.repeat(n) + l).join(`\n`)
 }
